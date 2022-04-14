@@ -10,7 +10,7 @@ import com.github.zfy.serialize.Serializer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+
 
 /**
  * Kryo serialization class, Kryo serialization efficiency is very high, but only compatible with Java language

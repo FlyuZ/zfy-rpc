@@ -12,11 +12,25 @@
         <kryo.version>5.3.0</kryo.version>
         <netty.version>4.1.70.Final</netty.version>
         <cglib.version>3.3.0</cglib.version>
+        <!--logging-->
+        <slf4j.version>1.7.25</slf4j.version>
     </properties>
     <modules>
-        <module>rpc-common</module>
         <module>rpc-core</module>
     </modules>
+    <dependencies>
+        <!-- log -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+    </dependencies>
 
 
 </project>

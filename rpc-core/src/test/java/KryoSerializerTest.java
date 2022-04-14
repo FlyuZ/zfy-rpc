@@ -25,8 +25,8 @@ public class KryoSerializerTest {
     public void writeToFile(byte[] obj) throws IOException {
         Files.write(Paths.get("file.txt"), obj);
     }
-    public byte[] getFromFile() throws IOException {
+    public void getFromFile() throws IOException {
 //        byte[] obj = Files.readAllBytes(Path.of("file.txt"));
-//        return obj;
+
     }
 }
