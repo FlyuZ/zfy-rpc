@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author zfy
- * @createTime 2022.4.10
+ * @createTime 2022.4.15
  */
 @Slf4j
 @Component
@@ -35,7 +35,6 @@ public class NettyServer {
 
     //编写一个方法，完成对NettyServer的初始化和启动
     public void startServer()  {
-
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {

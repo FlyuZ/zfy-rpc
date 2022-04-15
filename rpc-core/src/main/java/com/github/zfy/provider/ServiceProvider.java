@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 在服务器端注册需要的service类
  * @author zfy
  * @createTime 2022.4.11
  */
@@ -20,7 +21,7 @@ public class ServiceProvider {
             return;
         registeredService.add(serviceName);
         serviceMap.put(serviceName, service);
-        log.info("向接口: {} 注册服务: {}", service.getClass().getInterfaces(), serviceName);
+        log.info("向接口: {} 注册服务: {}", serviceName, service.getClass().getName());
     }
 
     public Object getServiceProvider(String serviceName) throws Exception {

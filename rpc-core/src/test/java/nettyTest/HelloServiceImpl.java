@@ -15,7 +15,4 @@ public class HelloServiceImpl implements HelloService {
             return "你好客户端, 我已经收到你的消息 ";
         }
     }
-    public void add(){
-        count += 1;
-    }
 }
