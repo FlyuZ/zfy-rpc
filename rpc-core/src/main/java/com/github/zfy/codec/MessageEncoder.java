@@ -1,7 +1,5 @@
 package com.github.zfy.codec;
 
-import com.github.zfy.config.RpcConstants;
-import com.github.zfy.dto.RpcMessage;
 import com.github.zfy.serialize.Serializer;
 import com.github.zfy.serialize.kryo.KryoSerializer;
 import io.netty.buffer.ByteBuf;
@@ -11,26 +9,26 @@ import lombok.extern.slf4j.Slf4j;
 
 
 /**
+ * 编码类，将object序列化为byte数组
  * @author zfy
  * @createTime 2022.4.10
  */
 @Slf4j
 public class MessageEncoder extends MessageToByteEncoder {
-    private final Class<?> genericClass;
     private final Serializer serializer;
 
     public MessageEncoder(Class<?> genericClass) {
-        this.genericClass = genericClass;
         this.serializer = new KryoSerializer(genericClass);
     }
 
     @Override
     public void encode(ChannelHandlerContext ctx, Object obj, ByteBuf out) throws Exception {
         try {
-            // build full length
             byte[] bodyBytes = serializer.serialize(obj);
-            out.writeBytes(bodyBytes);
+            log.info("经过序列化" + bodyBytes.length);
+            out.writeInt(1);
             out.writeInt(bodyBytes.length);
+            out.writeBytes(bodyBytes);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -2,6 +2,7 @@ package com.github.zfy.proxy;
 
 import com.github.zfy.dto.RpcRequest;
 
+import com.github.zfy.dto.RpcResponse;
 import com.github.zfy.remoting.transport.client.NettyClient;
 
 
@@ -9,6 +10,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +43,8 @@ public class RpcClientProxy implements InvocationHandler {
                 .parameterTypes(method.getParameterTypes())
                 .requestId(UUID.randomUUID().toString())
                 .build();
-        return nettyClient.sendRpcRequest(rpcRequest);
+        CompletableFuture<RpcResponse> completableFuture =  nettyClient.sendRpcRequest(rpcRequest);
+        RpcResponse rpcResponse = completableFuture.get();
+        return rpcResponse.getResult();
     }
 }

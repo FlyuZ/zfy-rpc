@@ -6,6 +6,6 @@ import com.github.zfy.remoting.transport.server.NettyServer;
 public class ServerBootstrap {
     public static void main(String[] args) {
 
-        NettyServer.startServer("127.0.0.1", 7000);
+        NettyServer.startServer();
     }
 }

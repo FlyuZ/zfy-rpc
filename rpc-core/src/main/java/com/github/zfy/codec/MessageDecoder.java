@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 /**
+ * 解码类，从byte数组反序列化出类
  * @author zfy
  * @createTime 2022.4.10
  */
@@ -25,17 +26,17 @@ public class MessageDecoder extends ByteToMessageDecoder {
     @Override
     public final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (in.readableBytes() < 4) {
-            return;
+            log.info("反序列化1出错");
         }
-        in.markReaderIndex();
+        int magic = in.readInt();
         int dataLength = in.readInt();
-        if (in.readableBytes() < dataLength) {
-            in.resetReaderIndex();
-            return;
-        }
+
+        log.info(magic + " "  + dataLength);
+
         byte[] data = new byte[dataLength];
         in.readBytes(data);
         Object obj = serializer.deserialize(data);
+        log.info("经过反序列化");
         out.add(obj);
     }
 }

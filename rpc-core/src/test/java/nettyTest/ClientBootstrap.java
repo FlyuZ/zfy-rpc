@@ -11,7 +11,7 @@ public class ClientBootstrap {
     public static void main(String[] args) throws  Exception{
         //        //创建一个消费者
         NettyClient customer = new NettyClient();
-        customer.initClient("127.0.0.1", 7000);
+        customer.initClient("127.0.0.1", 9998);
         RpcClientProxy rpcClientProxy = new RpcClientProxy(customer);
 
         //创建代理对象

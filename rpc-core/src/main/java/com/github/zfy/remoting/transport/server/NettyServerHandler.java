@@ -2,12 +2,13 @@ package com.github.zfy.remoting.transport.server;
 
 import com.github.zfy.dto.RpcRequest;
 import com.github.zfy.dto.RpcResponse;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,25 +17,37 @@ import java.util.Map;
  * @createTime 2022.4.11
  */
 @Slf4j
-public class NettyServerHandler extends ChannelInboundHandlerAdapter {
+public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
     private static final Map<String, Object> CLASS_MAP = new HashMap<>();
 
+//    @Override
+//    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+//        //获取客户端发送的消息，并调用服务
+//        Object obj = Class.forName("nettyTest.HelloServiceImpl").getDeclaredConstructor().newInstance();  //  这里的问题？？？？
+//
+//        CLASS_MAP.put("nettyTest.HelloService", obj);
+//        log.info("msg=" + msg);
+//        RpcRequest request = (RpcRequest) msg;
+//        RpcResponse response = handle(request);
+//        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+//    }
+
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, RpcRequest rpcRequest) throws Exception {
         //获取客户端发送的消息，并调用服务
         Object obj = Class.forName("nettyTest.HelloServiceImpl").getDeclaredConstructor().newInstance();  //  这里的问题？？？？
 
         CLASS_MAP.put("nettyTest.HelloService", obj);
-        log.info("msg=" + msg);
-        RpcRequest request = (RpcRequest) msg;
-        RpcResponse response = handle(request);
-        ctx.writeAndFlush(response);
+        log.info("获取从客户端发送的消息" + rpcRequest.toString());
+        RpcResponse response = handle(rpcRequest);
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         // 出现异常时关闭连接。
+        log.error("server catch exception");
         cause.printStackTrace();
         ctx.close();
     }
@@ -45,10 +58,6 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         String className = rpcRequest.getClassName();
         try {
             Object clazz = CLASS_MAP.get(className);
-//            if(clazz != null) {
-//                System.out.println(Arrays.toString(clazz.getClass().getMethods()));
-//                System.out.println(rpcRequest.getMethodName());
-//            }
 
             Method method = clazz.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParameterTypes());
             Object result = null;

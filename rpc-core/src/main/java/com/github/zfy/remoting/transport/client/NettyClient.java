@@ -4,15 +4,18 @@ import com.github.zfy.codec.MessageDecoder;
 import com.github.zfy.codec.MessageEncoder;
 import com.github.zfy.dto.RpcRequest;
 import com.github.zfy.dto.RpcResponse;
-import com.github.zfy.remoting.future.FutureHolder;
-import com.github.zfy.remoting.future.RpcFuture;
+
+import com.github.zfy.utils.SingletonFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,43 +24,40 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class NettyClient {
+    private final UnprocessedRequests unprocessedRequests;
     private Channel channel;
 
-    public synchronized Object sendRpcRequest(RpcRequest rpcRequest) {
-        ChannelFuture channelFuture = channel.writeAndFlush(rpcRequest);
-        RpcFuture rpcFuture = new RpcFuture(channelFuture.channel().eventLoop());
-        channelFuture.addListener((ChannelFutureListener) future -> {
+    public NettyClient(){
+        this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+    }
+
+    public  CompletableFuture<RpcResponse> sendRpcRequest(RpcRequest rpcRequest) {
+        CompletableFuture<RpcResponse> resultFuture = new CompletableFuture<>();
+        unprocessedRequests.put(rpcRequest.getRequestId(), resultFuture);
+
+        channel.writeAndFlush(rpcRequest).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
-                channel.closeFuture().addListener((ChannelFutureListener) closefuture -> {
-                    log.info("连接成功");
-                });
-                FutureHolder.registerFuture(rpcRequest.getRequestId(), rpcFuture);
+                log.info(String.format("客户端发送消息: %s", rpcRequest.toString()));
             } else {
-                rpcFuture.tryFailure(future.cause());
+                future.channel().close();
+                resultFuture.completeExceptionally(future.cause());
+                log.error("发送消息时发生错误: ", future.cause());
             }
         });
-        RpcResponse rpcResponse = null;
-        try {
-            //没用listener和getNow的方式是因为客户端是同步的，同时简便实现
-            rpcResponse = rpcFuture.get(5, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (rpcResponse.getResult() != null) {
-            return rpcResponse.getResult();
-        } else {
-            return null;
-        }
+        return resultFuture;
     }
 
     //初始化客户端
     public void initClient(String hostname, int port) {
+        CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
         //创建EventLoopGroup
         NioEventLoopGroup group = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .handler(new LoggingHandler(LogLevel.INFO))
                 .handler(new ChannelInitializer<SocketChannel>() {
                              @Override
                              protected void initChannel(SocketChannel ch) throws Exception {
@@ -69,8 +69,16 @@ public class NettyClient {
                          }
                 );
         try {
+//            bootstrap.connect(hostname, port).addListener((ChannelFutureListener) future -> {
+//                if (future.isSuccess()) {
+//                    log.info("The client has connected [{}] successful!", hostname+port);
+//                    completableFuture.complete(future.channel());
+//                } else {
+//                    throw new IllegalStateException();
+//                }
+//            });
             this.channel = bootstrap.connect(hostname, port).sync().channel();
-            log.info("客户端建立连接~~");
+            log.info("The client has connected [{}] successful!", hostname+port);
         } catch (Exception e) {
             e.printStackTrace();
         }
