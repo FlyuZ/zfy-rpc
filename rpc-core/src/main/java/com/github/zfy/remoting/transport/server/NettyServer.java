@@ -4,6 +4,8 @@ import com.github.zfy.codec.MessageDecoder;
 import com.github.zfy.codec.MessageEncoder;
 import com.github.zfy.dto.RpcRequest;
 import com.github.zfy.dto.RpcResponse;
+import com.github.zfy.provider.ServiceProvider;
+import com.github.zfy.utils.SingletonFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -11,13 +13,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author zfy
@@ -26,11 +23,18 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class NettyServer {
-    public static final String HOST = "127.0.0.1";
-    public static final int PORT = 9998;
+    private static final String HOST = "127.0.0.1";
+    private static final int PORT = 9998;
+
+    private final ServiceProvider serviceProvider = SingletonFactory.getInstance(ServiceProvider.class);
+    public  <T> void registerService(T service) {
+        String serviceName = service.getClass().getInterfaces()[0].getCanonicalName();
+        serviceProvider.addServiceProvider(serviceName, service);
+        log.info("服务器已注册: " + serviceName);
+    }
 
     //编写一个方法，完成对NettyServer的初始化和启动
-    public static void startServer()  {
+    public void startServer()  {
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();

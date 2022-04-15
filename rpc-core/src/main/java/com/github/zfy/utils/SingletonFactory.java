@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class SingletonFactory {
 
-    private static Map<Class, Object> objectMap = new HashMap<>();
+    private static  Map<Class, Object> objectMap = new HashMap<>();
 
     private SingletonFactory() {}
 
