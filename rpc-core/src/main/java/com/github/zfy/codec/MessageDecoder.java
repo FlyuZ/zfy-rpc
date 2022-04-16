@@ -18,6 +18,7 @@ import java.util.List;
 public class MessageDecoder extends ByteToMessageDecoder {
 
     private final Serializer serializer;
+    private static final int MAGIC_NUMBER = 0xCAFEBABE;
 
     public MessageDecoder(Class<?> genericClass) {
         this.serializer = new KryoSerializer(genericClass);
@@ -25,18 +26,17 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
     @Override
     public final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        if (in.readableBytes() < 4) {
-            log.info("反序列化1出错");
-        }
+
         int magic = in.readInt();
+        if(magic != MAGIC_NUMBER){
+            log.error("不识别的协议包：{}", magic);
+            throw new Exception("UNKNOWN_PROTOCOL");
+        }
         int dataLength = in.readInt();
-
-        log.info(magic + " "  + dataLength);
-
         byte[] data = new byte[dataLength];
         in.readBytes(data);
         Object obj = serializer.deserialize(data);
-        log.info("经过反序列化");
+        //添加到对象列表
         out.add(obj);
     }
 }

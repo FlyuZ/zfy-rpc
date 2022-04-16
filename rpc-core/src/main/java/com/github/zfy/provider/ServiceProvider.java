@@ -7,12 +7,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 在服务器端注册需要的service类
  * @author zfy
  * @createTime 2022.4.11
+ * @description 默认的服务注册表，保存服务端本地服务
  */
 @Slf4j
 public class ServiceProvider {
+
+    /**
+     * key = 服务名称(即接口名), value = 服务实体(即实现类的实例对象)
+     */
     private static final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
     private static final Set<String> registeredService = ConcurrentHashMap.newKeySet();
 

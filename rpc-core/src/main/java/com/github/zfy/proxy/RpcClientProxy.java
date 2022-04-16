@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @author zfy
  * @createTime 2022.4.11
+ * @description Rpc客户端动态代理
  */
 @Slf4j
 public class RpcClientProxy implements InvocationHandler {
@@ -27,6 +28,7 @@ public class RpcClientProxy implements InvocationHandler {
 
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Class<T> clazz) {
+        //创建代理对象
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]{clazz}, this);
     }
 
@@ -42,7 +44,9 @@ public class RpcClientProxy implements InvocationHandler {
                 .className(method.getDeclaringClass().getName())
                 .parameterTypes(method.getParameterTypes())
                 .requestId(UUID.randomUUID().toString())
+                .heartBeat(false)
                 .build();
+        //异步获取调用结果
         CompletableFuture<RpcResponse> completableFuture =  nettyClient.sendRpcRequest(rpcRequest);
         RpcResponse rpcResponse = completableFuture.get();
         return rpcResponse.getResult();

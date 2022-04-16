@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class MessageEncoder extends MessageToByteEncoder {
+    private static final int MAGIC_NUMBER = 0xCAFEBABE;
     private final Serializer serializer;
 
     public MessageEncoder(Class<?> genericClass) {
@@ -25,8 +26,7 @@ public class MessageEncoder extends MessageToByteEncoder {
     public void encode(ChannelHandlerContext ctx, Object obj, ByteBuf out) throws Exception {
         try {
             byte[] bodyBytes = serializer.serialize(obj);
-            log.info("经过序列化" + bodyBytes.length);
-            out.writeInt(1);
+            out.writeInt(MAGIC_NUMBER);
             out.writeInt(bodyBytes.length);
             out.writeBytes(bodyBytes);
         } catch (Exception e) {

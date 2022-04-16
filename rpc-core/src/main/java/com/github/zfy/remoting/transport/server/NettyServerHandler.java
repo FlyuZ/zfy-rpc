@@ -8,6 +8,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -27,13 +29,26 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcRequest rpcRequest) throws Exception {
-        //获取客户端发送的消息，并调用服务
-//        Object obj = Class.forName("nettyTest.HelloServiceImpl").getDeclaredConstructor().newInstance();  //  这里的问题？？？？
-//        Object obj = serviceProvider.getServiceProvider(rpcRequest.getClassName());
-//        CLASS_MAP.put("nettyTest.HelloService", obj);
-        log.info("获取从客户端发送的消息" + rpcRequest.toString());
+        if(rpcRequest.getHeartBeat()){
+            log.info("接收到客户端心跳包……");
+            return;
+        }
+        log.info("获取从客户端发送的消息" + rpcRequest);
         RpcResponse response = handle(rpcRequest);
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if(evt instanceof IdleStateEvent){
+            IdleState state = ((IdleStateEvent) evt).state();
+            if(state == IdleState.READER_IDLE){
+                log.info("长时间未收到心跳包，断开连接……");
+                ctx.close();
+            }
+        }else {
+            super.userEventTriggered(ctx, evt);
+        }
     }
 
     @Override

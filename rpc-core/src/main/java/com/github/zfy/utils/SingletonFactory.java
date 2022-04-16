@@ -9,6 +9,7 @@ import java.util.Map;
  * 单例工厂
  * @author zfy
  * @createTime 2022.4.14
+ * @description 单例工厂，保证一个类只有一个实例，节约资源，保证线程安全
  */
 public class SingletonFactory {
 
